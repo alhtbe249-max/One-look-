@@ -1,0 +1,2414 @@
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>One Look | ون لوك</title>
+  <!-- خط Cairo العربي -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* متغيرات الهوية البصرية لتطبيق ون لوك */
+    :root {
+      --bg-main: #09090b;
+      --bg-surface: #121217;
+      --bg-card: #141418;
+      --accent-pink: #fe2c55;
+      --accent-cyan: #25f4ee;
+      --text-main: #ffffff;
+      --text-muted: #a1a1aa;
+      --glass: rgba(20, 20, 27, 0.78);
+      --border: rgba(255, 255, 255, 0.11);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #030305;
+      background-image:
+        radial-gradient(circle at 18% 18%, rgba(37, 244, 238, 0.1), transparent 42%),
+        radial-gradient(circle at 82% 82%, rgba(254, 44, 85, 0.11), transparent 42%);
+      color: var(--text-main);
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* الإطار الرئيسي المتجاوب للتطبيق */
+    .app-shell {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      height: 100dvh;
+      max-height: 920px;
+      background: var(--bg-main);
+      overflow: hidden;
+      box-shadow: 0 28px 85px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--border);
+    }
+
+    @media (min-width: 520px) {
+      .app-shell {
+        height: 94dvh;
+        border-radius: 34px;
+      }
+    }
+
+    @media (max-height: 680px) {
+      .post-info {
+        bottom: 72px;
+      }
+      .side-actions {
+        bottom: 76px;
+        gap: 10px;
+      }
+    }
+
+    /* شاشات التطبيق */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      background: var(--bg-main);
+      z-index: 1;
+    }
+
+    .screen.active {
+      display: flex;
+      z-index: 5;
+    }
+
+    /* إشعار عائم Toast */
+    .toast {
+      position: absolute;
+      top: 66px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(18, 18, 24, 0.95);
+      border: 1px solid rgba(37, 244, 238, 0.45);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      z-index: 80;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      white-space: nowrap;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ==================== 1. شاشة تسجيل الدخول الزجاجية والشخصية التفاعلية ==================== */
+    .auth-screen {
+      background:
+        radial-gradient(circle at 50% 8%, rgba(254, 44, 85, 0.2), transparent 50%),
+        radial-gradient(circle at 85% 85%, rgba(37, 244, 238, 0.15), transparent 50%),
+        var(--bg-main);
+      padding: 20px 18px 24px;
+      justify-content: space-between;
+      overflow-y: auto;
+      scrollbar-width: none;
+      z-index: 30;
+    }
+
+    .auth-screen::-webkit-scrollbar {
+      display: none;
+    }
+
+    .brand-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .neon-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo-badge {
+      width: 25px;
+      height: 25px;
+      border-radius: 8px;
+      background: #fff;
+      color: #000;
+      font-weight: 900;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: -2.5px 0 0 var(--accent-cyan), 2.5px 0 0 var(--accent-pink);
+    }
+
+    .brand-logo-text {
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: -1.5px 0 0 rgba(37, 244, 238, 0.8), 1.5px 0 0 rgba(254, 44, 85, 0.8);
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* مسرح الشخصية التفاعلية SVG */
+    .mascot-stage {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 4px 0 8px;
+      user-select: none;
+    }
+
+    .mascot-svg {
+      width: 148px;
+      height: 132px;
+      overflow: visible;
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.65));
+    }
+
+    .mascot-head {
+      transform-origin: 85px 76px;
+      transition: transform 0.22s ease-out;
+    }
+
+    .mascot-pupil {
+      transition: transform 0.14s ease-out;
+    }
+
+    .mascot-hand-left,
+    .mascot-hand-right {
+      transition: transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .mascot-covering .mascot-hand-left {
+      transform: translate(20px, -48px) rotate(22deg);
+    }
+
+    .mascot-covering .mascot-hand-right {
+      transform: translate(-20px, -48px) rotate(-22deg);
+    }
+
+    .mascot-peeking .mascot-hand-left {
+      transform: translate(20px, -48px) rotate(22deg);
+    }
+
+    .mascot-peeking .mascot-hand-right {
+      transform: translate(-8px, -18px) rotate(-8deg);
+    }
+
+    .auth-card {
+      background: var(--glass);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 18px 18px 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.72);
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: rgba(9, 9, 11, 0.7);
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 14px;
+    }
+
+    .auth-tab {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      padding: 8px;
+      border-radius: 11px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .auth-tab.active {
+      background: linear-gradient(135deg, rgba(254, 44, 85, 0.28), rgba(37, 244, 238, 0.16));
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .input-group {
+      margin-bottom: 11px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.78rem;
+      color: #d4d4d8;
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+
+    .input-box {
+      display: flex;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.75);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 0 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-box:focus-within {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(37, 244, 238, 0.12);
+    }
+
+    .input-box input,
+    .input-box select {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      padding: 10px 6px;
+      font-size: 0.88rem;
+    }
+
+    .input-box input.ltr {
+      direction: ltr;
+      text-align: left;
+    }
+
+    .input-box select option {
+      background: #141418;
+      color: #fff;
+    }
+
+    .toggle-pass {
+      background: rgba(255, 255, 255, 0.06);
+      border: none;
+      border-radius: 8px;
+      color: var(--accent-cyan);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent-pink), #ff4b6e);
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(254, 44, 85, 0.36);
+      transition: transform 0.15s, opacity 0.2s;
+      margin-top: 4px;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      width: 100%;
+      border: 1px solid rgba(37, 244, 238, 0.32);
+      border-radius: 13px;
+      padding: 9px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      background: rgba(37, 244, 238, 0.08);
+      cursor: pointer;
+      margin-top: 9px;
+    }
+
+    .auth-status {
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: center;
+      color: #fda4af;
+    }
+
+    .auth-status.ok {
+      color: #5eead4;
+    }
+
+    /* ==================== 2. شاشة الفيديوهات الرئيسية (Scroll Snap Feed) ==================== */
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      padding: 13px 13px 10px;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.82), transparent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .brand-mini {
+      font-size: 0.92rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: -1px 0 0 var(--accent-cyan), 1px 0 0 var(--accent-pink);
+      white-space: nowrap;
+    }
+
+    .feed-tabs {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .feed-tab {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.65);
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      position: relative;
+      padding-bottom: 4px;
+    }
+
+    .feed-tab.active {
+      color: #fff;
+    }
+
+    .feed-tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 16%;
+      right: 16%;
+      height: 2.5px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink));
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-pill {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .feed-container {
+      flex: 1;
+      height: 100%;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
+    }
+
+    .feed-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .post-slide {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      background: #050507;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .post-media {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .post-gradient {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, transparent 44%, rgba(0, 0, 0, 0.35) 100%);
+      pointer-events: none;
+    }
+
+    .pause-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.85);
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.18s;
+      z-index: 8;
+    }
+
+    .pause-badge.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .heart-burst {
+      position: absolute;
+      font-size: 5rem;
+      color: var(--accent-pink);
+      transform: translate(-50%, -50%) scale(0.3);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 15;
+      filter: drop-shadow(0 0 22px rgba(254, 44, 85, 0.75));
+      transition: transform 0.35s cubic-bezier(0.17, 0.89, 0.32, 1.49), opacity 0.35s ease;
+    }
+
+    .heart-burst.pop {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    .post-info {
+      position: absolute;
+      bottom: 78px;
+      right: 14px;
+      left: 78px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .post-author {
+      font-weight: 800;
+      font-size: 0.98rem;
+      margin-bottom: 5px;
+      direction: ltr;
+      text-align: right;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+    }
+
+    .post-caption {
+      font-size: 0.86rem;
+      line-height: 1.45;
+      color: #f4f4f5;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+    }
+
+    .post-tags {
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .side-actions {
+      position: absolute;
+      bottom: 84px;
+      left: 12px;
+      z-index: 12;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 48px;
+      height: 48px;
+    }
+
+    .avatar-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #fff;
+    }
+
+    .follow-mini-btn {
+      position: absolute;
+      bottom: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent-pink);
+      color: #fff;
+      font-weight: 900;
+      font-size: 0.85rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .follow-mini-btn.followed {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+    }
+
+    .action-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.18rem;
+      transition: transform 0.15s, background 0.2s;
+    }
+
+    .action-btn.liked .action-icon {
+      color: var(--accent-pink);
+      background: rgba(254, 44, 85, 0.22);
+      transform: scale(1.08);
+    }
+
+    .action-count {
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .disc {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #18181b 22%, #3f3f46 24%, #09090b 65%, var(--accent-pink) 100%);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      animation: spinDisc 5s linear infinite;
+    }
+
+    @keyframes spinDisc {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==================== 3. الشاشات الفرعية: استكشف، الإشعارات، الملف الشخصي ==================== */
+    .sub-header {
+      padding: 15px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(18, 18, 23, 0.94);
+    }
+
+    .sub-title {
+      font-size: 1.02rem;
+      font-weight: 800;
+    }
+
+    .sub-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 14px 86px;
+      scrollbar-width: none;
+    }
+
+    .sub-body::-webkit-scrollbar {
+      display: none;
+    }
+
+    .explore-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .explore-tile {
+      position: relative;
+      aspect-ratio: 9 / 14;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .explore-tile img,
+    .explore-tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .explore-cap {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 18px 8px 8px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.88), transparent);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .notif-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .profile-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .profile-avatar {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2.5px solid var(--accent-cyan);
+      margin-bottom: 8px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat-num {
+      font-weight: 900;
+      font-size: 1rem;
+      color: var(--accent-cyan);
+    }
+
+    .stat-lbl {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    /* ==================== 4. شريط التنقل السفلي ==================== */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 62px;
+      background: rgba(10, 10, 13, 0.94);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: none;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      z-index: 25;
+    }
+
+    .bottom-nav.visible {
+      display: grid;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      color: #fff;
+    }
+
+    .nav-btn span.ico {
+      font-size: 1.15rem;
+    }
+
+    .nav-btn svg.ico-svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+
+    .action-icon svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+
+    .pill-svg {
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .avatar-edit-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 50%;
+      transform: translateX(44px);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-cyan), #12b8b3);
+      color: #09090b;
+      border: 2px solid var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .profile-avatar-wrap {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .profile-name-row {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .edit-name-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: var(--accent-cyan);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .edit-name-box {
+      display: none;
+      margin-top: 10px;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .edit-name-box.open {
+      display: flex;
+    }
+
+    .edit-name-box input {
+      background: rgba(9, 9, 11, 0.85);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 10px;
+      padding: 6px 10px;
+      color: #fff;
+      font-size: 0.82rem;
+      outline: none;
+      width: 155px;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .edit-name-save {
+      background: var(--accent-pink);
+      border: none;
+      border-radius: 10px;
+      padding: 6px 12px;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .create-plus {
+      width: 44px;
+      height: 30px;
+      border-radius: 10px;
+      background: #fff;
+      color: #000;
+      font-size: 1.35rem;
+      font-weight: 900;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: -3px 0 0 var(--accent-cyan), 3px 0 0 var(--accent-pink);
+      margin: 0 auto;
+    }
+
+    /* ==================== 5. النوافذ السفلية: التعليقات ونشر المنشور ==================== */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.74);
+      backdrop-filter: blur(6px);
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-height: 86%;
+      background: #141418;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      border: 1px solid var(--border);
+      padding: 18px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-weight: 800;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .comment-list {
+      flex: 1;
+      max-height: 280px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .comment-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 9px 12px;
+      margin-bottom: 8px;
+    }
+
+    .comment-author {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      direction: ltr;
+      text-align: right;
+    }
+
+    .comment-text {
+      font-size: 0.86rem;
+      margin-top: 2px;
+    }
+
+    .comment-form {
+      display: flex;
+      gap: 8px;
+    }
+
+    .comment-form input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: #fff;
+      outline: none;
+    }
+
+    .comment-form button {
+      background: var(--accent-pink);
+      border: none;
+      border-radius: 12px;
+      padding: 0 16px;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- رسالة تنبيه عائمة -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ==================== 1. شاشة تسجيل الدخول ==================== -->
+    <section id="authScreen" class="screen auth-screen active">
+      <div class="brand-header">
+        <div class="neon-logo">
+          <span class="logo-badge">1L</span>
+          <span class="brand-logo-text">One Look | ون لوك</span>
+        </div>
+        <div class="brand-sub">لقطات سريعة • طاقة عالية • عالمك في نظرة</div>
+      </div>
+
+      <!-- شخصية تفاعلية تتبع الإدخال وتغطي عينيها عند كلمة السر -->
+      <div class="mascot-stage">
+        <svg id="mascot" class="mascot-svg" viewBox="0 0 170 140">
+          <defs>
+            <linearGradient id="neonRim" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#25f4ee" />
+              <stop offset="100%" stop-color="#fe2c55" />
+            </linearGradient>
+          </defs>
+          <g id="mascotHead" class="mascot-head">
+            <circle cx="48" cy="40" r="16" fill="#18181b" stroke="url(#neonRim)" stroke-width="2.5" />
+            <circle cx="122" cy="40" r="16" fill="#18181b" stroke="url(#neonRim)" stroke-width="2.5" />
+            <rect x="36" y="30" width="98" height="84" rx="42" fill="#18181b" stroke="url(#neonRim)" stroke-width="2.5" />
+            <circle cx="66" cy="68" r="10.5" fill="#ffffff" />
+            <circle cx="104" cy="68" r="10.5" fill="#ffffff" />
+            <circle id="pupilL" class="mascot-pupil" cx="66" cy="68" r="4.8" fill="#09090b" />
+            <circle id="pupilR" class="mascot-pupil" cx="104" cy="68" r="4.8" fill="#09090b" />
+            <circle cx="64" cy="66" r="1.7" fill="#25f4ee" />
+            <circle cx="102" cy="66" r="1.7" fill="#25f4ee" />
+            <ellipse cx="85" cy="81" rx="8" ry="5" fill="#25f4ee" />
+            <path id="mascotMouth" d="M 73 91 Q 85 100 97 91" stroke="#ffffff" stroke-width="2.8" fill="none" stroke-linecap="round" />
+          </g>
+          <ellipse id="handL" class="mascot-hand-left" cx="34" cy="112" rx="16" ry="11" fill="#22222c" stroke="#25f4ee" stroke-width="2" />
+          <ellipse id="handR" class="mascot-hand-right" cx="136" cy="112" rx="16" ry="11" fill="#22222c" stroke="#fe2c55" stroke-width="2" />
+        </svg>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button id="tabLogin" class="auth-tab active" type="button">تسجيل الدخول</button>
+          <button id="tabSignup" class="auth-tab" type="button">إنشاء حساب</button>
+        </div>
+
+        <form id="authForm">
+          <div id="usernameField" class="input-group" style="display: none;">
+            <label for="usernameInput">اسم المستخدم</label>
+            <div class="input-box">
+              <input id="usernameInput" type="text" class="ltr" placeholder="@onelook_star" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="emailInput">البريد الإلكتروني</label>
+            <div class="input-box">
+              <input id="emailInput" type="email" class="ltr" required placeholder="name@example.com" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="passwordInput">كلمة المرور</label>
+            <div class="input-box">
+              <input id="passwordInput" type="password" class="ltr" required placeholder="••••••••" />
+              <button id="togglePassBtn" class="toggle-pass" type="button">إظهار</button>
+            </div>
+          </div>
+
+          <button id="submitAuthBtn" class="btn-primary" type="submit">دخول إلى ون لوك</button>
+        </form>
+
+        <button id="demoLoginBtn" class="btn-secondary" type="button">⚡ دخول سريع بحساب تجريبي</button>
+        <div id="authStatus" class="auth-status"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. شاشة الفيديوهات الرئيسية ==================== -->
+    <section id="feedScreen" class="screen">
+      <div class="top-bar">
+        <div class="brand-mini">One Look</div>
+        <div class="feed-tabs">
+          <button id="tabFollowing" class="feed-tab" type="button">أتابعه</button>
+          <button id="tabForYou" class="feed-tab active" type="button">لك</button>
+        </div>
+        <div class="top-actions">
+          <button id="muteBtn" class="icon-pill" type="button">
+            <span id="muteIconWrap"></span>
+            <span>صوت</span>
+          </button>
+          <button id="userBadgeBtn" class="icon-pill" type="button"><bdi>@guest</bdi></button>
+        </div>
+      </div>
+
+      <div id="feedContainer" class="feed-container"></div>
+    </section>
+
+    <!-- ==================== 3. شاشة استكشف ==================== -->
+    <section id="exploreScreen" class="screen">
+      <div class="sub-header">
+        <div class="sub-title">استكشف الترند</div>
+        <span style="font-size: 0.78rem; color: var(--accent-cyan); font-weight: 800;">#ون_لوك</span>
+      </div>
+      <div class="sub-body">
+        <div id="exploreGrid" class="explore-grid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. شاشة الإشعارات ==================== -->
+    <section id="notifScreen" class="screen">
+      <div class="sub-header">
+        <div class="sub-title">الإشعارات</div>
+        <button id="clearNotifBtn" class="icon-pill" type="button">مسح</button>
+      </div>
+      <div id="notifList" class="sub-body"></div>
+    </section>
+
+    <!-- ==================== 5. شاشة الملف الشخصي ==================== -->
+    <section id="profileScreen" class="screen">
+      <div class="sub-header">
+        <div class="sub-title">الملف الشخصي</div>
+        <button id="logoutBtn" class="icon-pill" type="button">تسجيل خروج</button>
+      </div>
+      <div class="sub-body">
+        <div class="profile-card">
+          <div class="profile-avatar-wrap">
+            <img
+              id="profileAvatar"
+              class="profile-avatar"
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80"
+              onerror="this.src='https://placehold.co/150x150/141418/25f4ee?text=1L'"
+              alt="avatar"
+            />
+            <button id="changeAvatarBtn" class="avatar-edit-badge" type="button" title="تغيير الصورة الشخصية" aria-label="تغيير الصورة الشخصية">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </button>
+            <input id="avatarFileInput" type="file" accept="image/*" style="display: none;" />
+          </div>
+
+          <div class="profile-name-row">
+            <div id="profileName" style="font-weight: 800; font-size: 1.05rem;"><bdi>@guest</bdi></div>
+            <button id="openEditNameBtn" class="edit-name-btn" type="button">تعديل الاسم</button>
+          </div>
+
+          <div id="editNameBox" class="edit-name-box">
+            <input id="editNameInput" type="text" placeholder="@username" maxlength="28" />
+            <button id="saveNameBtn" class="edit-name-save" type="button">حفظ</button>
+          </div>
+
+          <div id="profileEmail" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">guest@onelook.app</div>
+          <div class="stats-row">
+            <div>
+              <div id="statFollowing" class="stat-num">0</div>
+              <div class="stat-lbl">أتابعهم</div>
+            </div>
+            <div>
+              <div id="statFollowers" class="stat-num">0</div>
+              <div class="stat-lbl">متابعون</div>
+            </div>
+            <div>
+              <div id="statLikes" class="stat-num">0</div>
+              <div class="stat-lbl">إعجاباتي</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-weight: 800; font-size: 0.92rem; margin-bottom: 10px;">منشوراتي</div>
+        <div id="myPostsGrid" class="explore-grid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== شريط التنقل السفلي ==================== -->
+    <nav id="bottomNav" class="bottom-nav">
+      <button class="nav-btn active" data-target="feedScreen" type="button">
+        <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"></path>
+        </svg>
+        <span>الرئيسية</span>
+      </button>
+      <button class="nav-btn" data-target="exploreScreen" type="button">
+        <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>استكشف</span>
+      </button>
+      <button id="openCreateBtn" class="nav-btn" type="button" aria-label="نشر">
+        <span class="create-plus">+</span>
+      </button>
+      <button class="nav-btn" data-target="notifScreen" type="button">
+        <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        <span>الإشعارات</span>
+      </button>
+      <button class="nav-btn" data-target="profileScreen" type="button">
+        <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21a8 8 0 0 0-16 0"></path>
+          <circle cx="12" cy="8" r="4"></circle>
+        </svg>
+        <span>حسابي</span>
+      </button>
+    </nav>
+
+    <!-- ==================== نافذة التعليقات ==================== -->
+    <div id="commentsModal" class="modal-backdrop">
+      <div class="modal-sheet">
+        <div class="modal-head">
+          <span>التعليقات</span>
+          <button id="closeCommentsBtn" class="close-btn" type="button">✕</button>
+        </div>
+        <div id="commentsList" class="comment-list"></div>
+        <form id="commentForm" class="comment-form">
+          <input id="commentInput" type="text" placeholder="أضف تعليقاً..." required />
+          <button type="submit">إرسال</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== نافذة نشر منشور (رابط مباشر أو ملف محلي) ==================== -->
+    <div id="createModal" class="modal-backdrop">
+      <div class="modal-sheet">
+        <div class="modal-head">
+          <span>نشر في One Look</span>
+          <button id="closeCreateBtn" class="close-btn" type="button">✕</button>
+        </div>
+
+        <form id="createPostForm">
+          <div class="input-group">
+            <label for="mediaTypeSelect">نوع الوسائط (mediaType)</label>
+            <div class="input-box">
+              <select id="mediaTypeSelect">
+                <option value="video">فيديو (video)</option>
+                <option value="image">صورة (image)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="mediaUrlInput">رابط الصورة أو الفيديو المباشر (mediaUrl)</label>
+            <div class="input-box">
+              <input id="mediaUrlInput" type="url" class="ltr" placeholder="https://example.com/clip.mp4 أو صورة.jpg" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="mediaFileInput">أو اختر ملفاً من جهازك (اختياري)</label>
+            <div class="input-box">
+              <input id="mediaFileInput" type="file" accept="video/*,image/*" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="captionInput">الوصف</label>
+            <div class="input-box">
+              <input id="captionInput" type="text" required placeholder="اكتب وصفاً جذاباً للقطة..." />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="tagsInput">الوسوم (Tags)</label>
+            <div class="input-box">
+              <input id="tagsInput" type="text" placeholder="#ون_لوك #ترند" />
+            </div>
+          </div>
+
+          <button class="btn-primary" type="submit">نشر الآن</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ربط Firebase Auth و Firestore لمشروع onelook-app بدون Firebase Storage -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      getDoc,
+      setDoc,
+      addDoc,
+      updateDoc,
+      arrayUnion,
+      arrayRemove,
+      increment,
+      onSnapshot,
+      query,
+      orderBy,
+      where,
+      getDocs,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOR3tff0miUAmuKQlRYnGKuUoxxfsuAtQ",
+      authDomain: "onelook-app.firebaseapp.com",
+      projectId: "onelook-app",
+      storageBucket: "onelook-app.firebasestorage.app",
+      messagingSenderId: "126184543237",
+      appId: "1:126184543237:web:48186caf2f7efaf13c786c"
+    };
+
+    const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80";
+
+    const SVG_ICONS = {
+      muted: `<svg class="pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`,
+      unmuted: `<svg class="pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`,
+      heart: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>`,
+      comment: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`,
+      share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`
+    };
+
+    function sanitizeHandle(raw) {
+      const cleaned = (raw || "").trim().replace(/^@+/, "").replace(/\s+/g, "_");
+      return cleaned ? "@" + cleaned : "";
+    }
+
+    function escapeHtml(v) {
+      return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // لا نستخدم البريد الإلكتروني أبداً كاسم عام (كان يكشف الإيميل/الرقم للجميع)
+    function resolveDisplayHandle(explicitName, authDisplayName, _email, uid) {
+      const fromDoc = sanitizeHandle(explicitName);
+      if (fromDoc) return fromDoc;
+      const fromAuth = sanitizeHandle(authDisplayName);
+      if (fromAuth) return fromAuth;
+      const suffix = String(uid || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toLowerCase();
+      return suffix ? "@user_" + suffix : "@onelook_user";
+    }
+
+    const DEFAULT_POSTS = [
+      {
+        id: "seed-1",
+        mediaType: "image",
+        mediaUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=900&q=80",
+        author: "@neon_pulse",
+        authorUid: "seed-u1",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80",
+        caption: "أجواء الليل وأضواء النيون في لقطة سريعة ✨",
+        tags: "#ون_لوك #نيون #ليل",
+        likesCount: 245,
+        likedBy: [],
+        comments: [
+          { author: "@sara_m", text: "اللقطة رهيبة جداً 🔥" }
+        ],
+        createdAtMs: Date.now() - 3600000
+      },
+      {
+        id: "seed-2",
+        mediaType: "image",
+        mediaUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900&q=80",
+        author: "@style_lens",
+        authorUid: "seed-u2",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+        caption: "إطلالة خاطفة للأنظار من أول نظرة",
+        tags: "#OneLook #ستايل #إبداع",
+        likesCount: 412,
+        likedBy: [],
+        comments: [],
+        createdAtMs: Date.now() - 1800000
+      }
+    ];
+
+    const state = {
+      isSignup: false,
+      isMuted: true,
+      feedTab: "foryou",
+      currentUser: null,
+      following: [],
+      posts: [...DEFAULT_POSTS],
+      activeCommentPostId: null,
+      notifications: [
+        { id: "n-1", text: "مرحباً بك في One Look | ون لوك! يمكنك نشر رابط صورة أو فيديو مباشرة." }
+      ]
+    };
+
+    let app = null;
+    let auth = null;
+    let db = null;
+    let unsubscribePosts = null;
+    let unsubscribeUserDoc = null;
+    let didInitialPostSync = false;
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch (initErr) {
+      console.warn("Firebase initialization fallback active:", initErr);
+    }
+
+    // مراجع عناصر الواجهة
+    const authScreen = document.getElementById("authScreen");
+    const feedScreen = document.getElementById("feedScreen");
+    const exploreScreen = document.getElementById("exploreScreen");
+    const notifScreen = document.getElementById("notifScreen");
+    const profileScreen = document.getElementById("profileScreen");
+    const bottomNav = document.getElementById("bottomNav");
+
+    const mascot = document.getElementById("mascot");
+    const mascotHead = document.getElementById("mascotHead");
+    const pupilL = document.getElementById("pupilL");
+    const pupilR = document.getElementById("pupilR");
+    const tabLogin = document.getElementById("tabLogin");
+    const tabSignup = document.getElementById("tabSignup");
+    const usernameField = document.getElementById("usernameField");
+    const usernameInput = document.getElementById("usernameInput");
+    const emailInput = document.getElementById("emailInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const togglePassBtn = document.getElementById("togglePassBtn");
+    const authForm = document.getElementById("authForm");
+    const submitAuthBtn = document.getElementById("submitAuthBtn");
+    const demoLoginBtn = document.getElementById("demoLoginBtn");
+    const authStatus = document.getElementById("authStatus");
+
+    const feedContainer = document.getElementById("feedContainer");
+    const muteBtn = document.getElementById("muteBtn");
+    const muteIconWrap = document.getElementById("muteIconWrap");
+    const userBadgeBtn = document.getElementById("userBadgeBtn");
+    const tabFollowing = document.getElementById("tabFollowing");
+    const tabForYou = document.getElementById("tabForYou");
+
+    const changeAvatarBtn = document.getElementById("changeAvatarBtn");
+    const avatarFileInput = document.getElementById("avatarFileInput");
+    const openEditNameBtn = document.getElementById("openEditNameBtn");
+    const editNameBox = document.getElementById("editNameBox");
+    const editNameInput = document.getElementById("editNameInput");
+    const saveNameBtn = document.getElementById("saveNameBtn");
+
+    muteIconWrap.innerHTML = SVG_ICONS.muted;
+    const createPostForm = document.getElementById("createPostForm");
+    const mediaTypeSelect = document.getElementById("mediaTypeSelect");
+    const mediaUrlInput = document.getElementById("mediaUrlInput");
+    const mediaFileInput = document.getElementById("mediaFileInput");
+    const captionInput = document.getElementById("captionInput");
+    const tagsInput = document.getElementById("tagsInput");
+
+    const toastEl = document.getElementById("toast");
+    let toastTimer = null;
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2300);
+    }
+
+    function addNotification(text) {
+      state.notifications.unshift({ id: "n-" + Date.now(), text });
+      if (notifScreen.classList.contains("active")) {
+        renderNotifications();
+      }
+    }
+
+    // ==================== تفاعل الشخصية مع الحقول ====================
+    function trackEyes(valLen) {
+      const shift = Math.min(Math.max((valLen - 8) * 0.35, -5), 5);
+      pupilL.style.transform = `translateX(${shift}px)`;
+      pupilR.style.transform = `translateX(${shift}px)`;
+      mascotHead.style.transform = `rotate(${shift * 0.9}deg)`;
+    }
+
+    emailInput.addEventListener("input", (e) => trackEyes(e.target.value.length));
+    usernameInput.addEventListener("input", (e) => trackEyes(e.target.value.length));
+
+    passwordInput.addEventListener("focus", () => {
+      if (passwordInput.type === "password") {
+        mascot.classList.remove("mascot-peeking");
+        mascot.classList.add("mascot-covering");
+      }
+    });
+
+    passwordInput.addEventListener("blur", () => {
+      setTimeout(() => {
+        if (document.activeElement !== passwordInput && document.activeElement !== togglePassBtn) {
+          mascot.classList.remove("mascot-covering");
+          mascot.classList.remove("mascot-peeking");
+        }
+      }, 100);
+    });
+
+    togglePassBtn.addEventListener("click", () => {
+      const isHidden = passwordInput.type === "password";
+      passwordInput.type = isHidden ? "text" : "password";
+      togglePassBtn.textContent = isHidden ? "إخفاء" : "إظهار";
+
+      if (isHidden) {
+        mascot.classList.remove("mascot-covering");
+        mascot.classList.add("mascot-peeking");
+      } else {
+        mascot.classList.remove("mascot-peeking");
+        if (document.activeElement === passwordInput) {
+          mascot.classList.add("mascot-covering");
+        }
+      }
+    });
+
+    function setAuthMode(signup) {
+      state.isSignup = signup;
+      tabLogin.classList.toggle("active", !signup);
+      tabSignup.classList.toggle("active", signup);
+      usernameField.style.display = signup ? "block" : "none";
+      submitAuthBtn.textContent = signup ? "إنشاء حساب جديد" : "دخول إلى ون لوك";
+      authStatus.textContent = "";
+    }
+
+    tabLogin.addEventListener("click", () => setAuthMode(false));
+    tabSignup.addEventListener("click", () => setAuthMode(true));
+
+    // ==================== التنقل بين الشاشات ====================
+    function switchScreen(targetId) {
+      [feedScreen, exploreScreen, notifScreen, profileScreen].forEach((sc) => {
+        sc.classList.toggle("active", sc.id === targetId);
+      });
+      document.querySelectorAll(".nav-btn[data-target]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.target === targetId);
+      });
+
+      if (targetId !== "feedScreen") {
+        feedContainer.querySelectorAll("video").forEach((v) => v.pause());
+      } else {
+        setupAutoPlayObserver();
+      }
+
+      if (targetId === "exploreScreen") renderExplore();
+      if (targetId === "notifScreen") renderNotifications();
+      if (targetId === "profileScreen") renderProfile();
+    }
+
+    document.querySelectorAll(".nav-btn[data-target]").forEach((btn) => {
+      btn.addEventListener("click", () => switchScreen(btn.dataset.target));
+    });
+
+    function enterApp(userObj) {
+      state.currentUser = {
+        followersCount: 0,
+        avatar: DEFAULT_AVATAR,
+        ...userObj
+      };
+      syncUserBadges();
+      authScreen.classList.remove("active");
+      bottomNav.classList.add("visible");
+      switchScreen("feedScreen");
+      didInitialPostSync = false;
+      startUserProfileListener();
+      startPostsListener();
+      renderFeed();
+    }
+
+    function syncUserBadges() {
+      const handle = resolveDisplayHandle(
+        state.currentUser?.username,
+        auth?.currentUser?.displayName,
+        state.currentUser?.email,
+        state.currentUser?.uid
+      );
+      if (state.currentUser) state.currentUser.username = handle;
+      userBadgeBtn.innerHTML = `<bdi>${escapeHtml(handle)}</bdi>`;
+      const avatarUrl = state.currentUser?.avatar || DEFAULT_AVATAR;
+      const profileAvatarEl = document.getElementById("profileAvatar");
+      if (profileAvatarEl) profileAvatarEl.src = avatarUrl;
+    }
+
+    function startUserProfileListener() {
+      if (unsubscribeUserDoc) {
+        unsubscribeUserDoc();
+        unsubscribeUserDoc = null;
+      }
+      if (!db || !state.currentUser || state.currentUser.isDemo || !state.currentUser.uid) {
+        return;
+      }
+      const userRef = doc(db, "users", state.currentUser.uid);
+      unsubscribeUserDoc = onSnapshot(
+        userRef,
+        (snap) => {
+          if (snap.exists() && state.currentUser) {
+            const data = snap.data();
+            state.currentUser.username = resolveDisplayHandle(
+              data.username,
+              auth?.currentUser?.displayName,
+              data.email || state.currentUser.email,
+              state.currentUser.uid
+            );
+            if (data.avatar) state.currentUser.avatar = data.avatar;
+            state.currentUser.followersCount = typeof data.followersCount === "number" ? data.followersCount : 0;
+            if (Array.isArray(data.following)) {
+              state.following = data.following;
+            }
+            syncUserBadges();
+            if (!didInitialPostSync) {
+              didInitialPostSync = true;
+              syncMyPostsToFirestore();
+            }
+            if (feedScreen.classList.contains("active")) renderFeed();
+            if (profileScreen.classList.contains("active")) renderProfile();
+          }
+        },
+        () => {}
+      );
+    }
+
+    // ==================== المصادقة عبر Firebase Auth + وضع تجريبي ====================
+    authForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const typedHandle = sanitizeHandle(usernameInput.value);
+
+      authStatus.className = "auth-status";
+      authStatus.textContent = "جاري التحقق من الحساب...";
+      submitAuthBtn.disabled = true;
+
+      if (!auth || !db) {
+        enterApp({
+          uid: "local-" + Date.now(),
+          username: resolveDisplayHandle(typedHandle, "", email, "local"),
+          email,
+          avatar: DEFAULT_AVATAR,
+          followersCount: 0,
+          isDemo: true
+        });
+        submitAuthBtn.disabled = false;
+        return;
+      }
+
+      try {
+        if (state.isSignup) {
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          const finalHandle = resolveDisplayHandle(typedHandle, "", email, cred.user.uid);
+          await updateProfile(cred.user, { displayName: finalHandle, photoURL: DEFAULT_AVATAR });
+          await setDoc(doc(db, "users", cred.user.uid), {
+            username: finalHandle,
+            email: cred.user.email,
+            avatar: DEFAULT_AVATAR,
+            followersCount: 0,
+            following: [],
+            createdAt: serverTimestamp()
+          });
+          authStatus.className = "auth-status ok";
+          authStatus.textContent = "تم إنشاء الحساب بنجاح!";
+        } else {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          const snap = await getDoc(doc(db, "users", cred.user.uid));
+          if (!snap.exists()) {
+            const initialHandle = resolveDisplayHandle(typedHandle, cred.user.displayName, cred.user.email || email, cred.user.uid);
+            await setDoc(doc(db, "users", cred.user.uid), {
+              username: initialHandle,
+              email: cred.user.email,
+              avatar: DEFAULT_AVATAR,
+              followersCount: 0,
+              following: [],
+              createdAt: serverTimestamp()
+            });
+          } else {
+            const existingData = snap.data();
+            if (typedHandle && typedHandle !== existingData.username) {
+              await setDoc(
+                doc(db, "users", cred.user.uid),
+                { username: typedHandle, updatedAt: serverTimestamp() },
+                { merge: true }
+              );
+              await updateProfile(cred.user, { displayName: typedHandle });
+            }
+          }
+          authStatus.className = "auth-status ok";
+          authStatus.textContent = "تم تسجيل الدخول بنجاح!";
+        }
+      } catch (err) {
+        authStatus.className = "auth-status";
+        authStatus.textContent = "تعذر الدخول: تأكد من صحة البيانات أو استخدم الدخول التجريبي.";
+      } finally {
+        submitAuthBtn.disabled = false;
+      }
+    });
+
+    demoLoginBtn.addEventListener("click", () => {
+      const customDemoHandle = sanitizeHandle(usernameInput.value) || "@onelook_guest";
+      enterApp({
+        uid: "demo-user",
+        username: customDemoHandle,
+        email: emailInput.value.trim() || "demo@onelook.app",
+        avatar: DEFAULT_AVATAR,
+        followersCount: 0,
+        isDemo: true
+      });
+      showToast("تم الدخول بحساب تجريبي ✨");
+    });
+
+    if (auth) {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          let resolvedUsername = resolveDisplayHandle("", user.displayName, user.email || "", user.uid);
+          let resolvedAvatar = user.photoURL || DEFAULT_AVATAR;
+          let resolvedFollowers = 0;
+
+          if (db) {
+            try {
+              const userDoc = await getDoc(doc(db, "users", user.uid));
+              if (userDoc.exists()) {
+                const d = userDoc.data();
+                resolvedUsername = resolveDisplayHandle(d.username, user.displayName, d.email || user.email || "", user.uid);
+                if (d.avatar) resolvedAvatar = d.avatar;
+                if (typeof d.followersCount === "number") resolvedFollowers = d.followersCount;
+                if (Array.isArray(d.following)) state.following = d.following;
+              }
+            } catch (_) {}
+          }
+
+          enterApp({
+            uid: user.uid,
+            username: resolvedUsername,
+            email: user.email || "",
+            avatar: resolvedAvatar,
+            followersCount: resolvedFollowers,
+            isDemo: false
+          });
+        }
+      });
+    }
+
+    async function handleLogout() {
+      if (unsubscribePosts) {
+        unsubscribePosts();
+        unsubscribePosts = null;
+      }
+      if (unsubscribeUserDoc) {
+        unsubscribeUserDoc();
+        unsubscribeUserDoc = null;
+      }
+      feedContainer.querySelectorAll("video").forEach((v) => v.pause());
+      if (auth && state.currentUser && !state.currentUser.isDemo) {
+        try {
+          await signOut(auth);
+        } catch (_) {}
+      }
+      state.currentUser = null;
+      bottomNav.classList.remove("visible");
+      [feedScreen, exploreScreen, notifScreen, profileScreen].forEach((sc) => sc.classList.remove("active"));
+      mascot.classList.remove("mascot-covering", "mascot-peeking");
+      authScreen.classList.add("active");
+      authStatus.textContent = "";
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", handleLogout);
+    userBadgeBtn.addEventListener("click", () => switchScreen("profileScreen"));
+
+    // ==================== مزامنة المنشورات مع Firestore ====================
+    function startPostsListener() {
+      if (unsubscribePosts) {
+        unsubscribePosts();
+        unsubscribePosts = null;
+      }
+      if (!db || !state.currentUser || state.currentUser.isDemo) {
+        return;
+      }
+      try {
+        const q = query(collection(db, "videos"), orderBy("createdAtMs", "desc"));
+        unsubscribePosts = onSnapshot(
+          q,
+          (snap) => {
+            const cloudPosts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+            state.posts = cloudPosts.length ? cloudPosts : [...DEFAULT_POSTS];
+            applyMyIdentityToPosts();
+            if (feedScreen.classList.contains("active")) renderFeed();
+            if (exploreScreen.classList.contains("active")) renderExplore();
+            if (profileScreen.classList.contains("active")) renderProfile();
+          },
+          () => {
+            renderFeed();
+          }
+        );
+      } catch (_) {
+        renderFeed();
+      }
+    }
+
+    // ==================== مزامنة هوية المستخدم (الاسم والصورة) مع منشوراته ====================
+    // المنشورات تحفظ نسخة من الاسم والصورة وقت النشر، فتبقى قديمة بعد تعديل الملف الشخصي.
+    function applyMyIdentityToPosts() {
+      const u = state.currentUser;
+      if (!u) return;
+      state.posts.forEach((p) => {
+        if (p.authorUid === u.uid) {
+          p.author = u.username;
+          if (u.avatar) p.avatar = u.avatar;
+        }
+      });
+    }
+
+    async function syncMyPostsToFirestore() {
+      const u = state.currentUser;
+      if (!db || !u || u.isDemo || !u.uid) return;
+      try {
+        const snap = await getDocs(query(collection(db, "videos"), where("authorUid", "==", u.uid)));
+        const jobs = [];
+        snap.forEach((d) => {
+          const data = d.data();
+          if (data.author !== u.username || (u.avatar && data.avatar !== u.avatar)) {
+            jobs.push(updateDoc(doc(db, "videos", d.id), { author: u.username, avatar: u.avatar || DEFAULT_AVATAR }));
+          }
+        });
+        await Promise.all(jobs);
+      } catch (_) {}
+    }
+
+    function isPersistablePost(post) {
+      return !!db && !!state.currentUser && !state.currentUser.isDemo &&
+        !String(post.id).startsWith("seed-") && !String(post.id).startsWith("local-");
+    }
+
+    function reportSaveError(err, what) {
+      console.error("Firestore save failed (" + what + "):", err);
+      const code = err && err.code ? err.code : "";
+      if (code === "permission-denied") {
+        showToast("تعذّر حفظ " + what + ": قواعد Firestore تمنع الكتابة");
+      } else if (code === "not-found") {
+        showToast("تعذّر حفظ " + what + ": المنشور غير موجود في السحابة");
+      } else {
+        showToast("تعذّر حفظ " + what + " (" + (code || "خطأ في الاتصال") + ")");
+      }
+    }
+
+    function followKey(post) {
+      return post.authorUid || post.author;
+    }
+
+    // ==================== عرض الفيديوهات والتفاعل ====================
+    function getFilteredPosts() {
+      if (state.feedTab === "following") {
+        const filtered = state.posts.filter((p) => state.following.includes(followKey(p)));
+        return filtered.length ? filtered : state.posts;
+      }
+      return state.posts;
+    }
+
+    function renderFeed() {
+      applyMyIdentityToPosts();
+      const list = getFilteredPosts();
+      feedContainer.innerHTML = "";
+
+      list.forEach((post) => {
+        const slide = document.createElement("div");
+        slide.className = "post-slide";
+        slide.dataset.id = post.id;
+
+        const uid = state.currentUser ? state.currentUser.uid : "guest";
+        const isLiked = Array.isArray(post.likedBy) && post.likedBy.includes(uid);
+        const isFollowed = state.following.includes(followKey(post));
+        const isMine = !!state.currentUser && post.authorUid === state.currentUser.uid;
+        const safeAuthor = escapeHtml(post.author);
+        const isVideo = post.mediaType !== "image";
+
+        const mediaEl = isVideo
+          ? `<video class="post-media" src="${escapeHtml(post.mediaUrl)}" playsinline loop preload="metadata" ${state.isMuted ? "muted" : ""}></video>`
+          : `<img class="post-media" src="${escapeHtml(post.mediaUrl)}" alt="${escapeHtml(post.caption)}" onerror="this.src='https://placehold.co/600x900/141418/25f4ee?text=One+Look'" />`;
+
+        slide.innerHTML = `
+          ${mediaEl}
+          <div class="post-gradient"></div>
+          ${isVideo ? '<div class="pause-badge">▶</div>' : ''}
+          <div class="heart-burst">♥</div>
+
+          <div class="post-info">
+            <div class="post-author"><bdi>${safeAuthor}</bdi></div>
+            <div class="post-caption">${escapeHtml(post.caption)}</div>
+            <div class="post-tags">${escapeHtml(post.tags || "")}</div>
+          </div>
+
+          <div class="side-actions">
+            <div class="avatar-wrap">
+              <img
+                class="avatar-img"
+                src="${escapeHtml(post.avatar || DEFAULT_AVATAR)}"
+                onerror="this.src='https://placehold.co/100x100/141418/fe2c55?text=1L'"
+                alt="${safeAuthor}"
+              />
+              <button class="follow-mini-btn ${isFollowed ? "followed" : ""}" type="button" ${isMine ? 'style="display:none"' : ""}>${isFollowed ? "✓" : "+"}</button>
+            </div>
+
+            <button class="action-btn ${isLiked ? "liked" : ""}" data-like="${post.id}" type="button">
+              <div class="action-icon">${SVG_ICONS.heart}</div>
+              <div class="action-count">${post.likesCount || 0}</div>
+            </button>
+
+            <button class="action-btn" data-comment="${post.id}" type="button">
+              <div class="action-icon">${SVG_ICONS.comment}</div>
+              <div class="action-count">${(post.comments && post.comments.length) || 0}</div>
+            </button>
+
+            <button class="action-btn" data-share="${post.id}" type="button">
+              <div class="action-icon">${SVG_ICONS.share}</div>
+              <div class="action-count">مشاركة</div>
+            </button>
+
+            <div class="disc"></div>
+          </div>
+        `;
+
+        const mediaNode = slide.querySelector(".post-media");
+        const pauseBadge = slide.querySelector(".pause-badge");
+        const heartBurst = slide.querySelector(".heart-burst");
+        let lastTap = 0;
+
+        slide.addEventListener("click", (e) => {
+          if (e.target.closest(".side-actions")) return;
+          const now = Date.now();
+          if (now - lastTap < 280) {
+            const rect = slide.getBoundingClientRect();
+            heartBurst.style.left = (e.clientX - rect.left) + "px";
+            heartBurst.style.top = (e.clientY - rect.top) + "px";
+            heartBurst.classList.add("pop");
+            setTimeout(() => heartBurst.classList.remove("pop"), 420);
+            toggleLike(post.id, true);
+          } else if (isVideo && mediaNode) {
+            if (mediaNode.paused) {
+              mediaNode.play().catch(() => {});
+              pauseBadge?.classList.remove("show");
+            } else {
+              mediaNode.pause();
+              pauseBadge?.classList.add("show");
+            }
+          }
+          lastTap = now;
+        });
+
+        slide.querySelector(`[data-like="${post.id}"]`).addEventListener("click", () => toggleLike(post.id, false));
+        slide.querySelector(`[data-comment="${post.id}"]`).addEventListener("click", () => openComments(post.id));
+        slide.querySelector(`[data-share="${post.id}"]`).addEventListener("click", () => {
+          const shareTarget = post.mediaUrl || window.location.href;
+          try {
+            const tmp = document.createElement("input");
+            tmp.value = shareTarget;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand("copy");
+            document.body.removeChild(tmp);
+          } catch (_) {}
+          showToast("تم نسخ الرابط بنجاح 🔗");
+        });
+        slide.querySelector(".follow-mini-btn").addEventListener("click", () => toggleFollow(followKey(post), post.author));
+
+        feedContainer.appendChild(slide);
+      });
+
+      setupAutoPlayObserver();
+    }
+
+    function setupAutoPlayObserver() {
+      const videos = feedContainer.querySelectorAll("video");
+      if (!videos.length) return;
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const vid = entry.target;
+          vid.muted = state.isMuted;
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.65 && feedScreen.classList.contains("active")) {
+            vid.play().catch(() => {});
+          } else {
+            vid.pause();
+          }
+        });
+      }, { root: feedContainer, threshold: [0.65] });
+      videos.forEach((v) => observer.observe(v));
+    }
+
+    muteBtn.addEventListener("click", () => {
+      state.isMuted = !state.isMuted;
+      muteIconWrap.innerHTML = state.isMuted ? SVG_ICONS.muted : SVG_ICONS.unmuted;
+      feedContainer.querySelectorAll("video").forEach((v) => {
+        v.muted = state.isMuted;
+      });
+      showToast(state.isMuted ? "تم كتم الصوت" : "تم تفعيل الصوت");
+    });
+
+    tabForYou.addEventListener("click", () => {
+      state.feedTab = "foryou";
+      tabForYou.classList.add("active");
+      tabFollowing.classList.remove("active");
+      switchScreen("feedScreen");
+      renderFeed();
+    });
+
+    tabFollowing.addEventListener("click", () => {
+      state.feedTab = "following";
+      tabFollowing.classList.add("active");
+      tabForYou.classList.remove("active");
+      switchScreen("feedScreen");
+      renderFeed();
+    });
+
+    async function toggleLike(postId, forceLike) {
+      const post = state.posts.find((p) => String(p.id) === String(postId));
+      if (!post) return;
+      const uid = state.currentUser ? state.currentUser.uid : "guest";
+      const likedBy = Array.isArray(post.likedBy) ? [...post.likedBy] : [];
+      const already = likedBy.includes(uid);
+
+      if (forceLike && already) return;
+      const prevLikedBy = post.likedBy;
+      const prevCount = post.likesCount;
+
+      if (already) {
+        post.likedBy = likedBy.filter((x) => x !== uid);
+        post.likesCount = Math.max(0, (post.likesCount || 1) - 1);
+      } else {
+        likedBy.push(uid);
+        post.likedBy = likedBy;
+        post.likesCount = (post.likesCount || 0) + 1;
+        addNotification(`أعجبت بمنشور ${post.author}`);
+      }
+
+      renderFeed();
+
+      if (db && state.currentUser && !state.currentUser.isDemo && !String(post.id).startsWith("seed-") && !String(post.id).startsWith("local-")) {
+        try {
+          await updateDoc(doc(db, "videos", String(post.id)), {
+            likedBy: already ? arrayRemove(uid) : arrayUnion(uid),
+            likesCount: increment(already ? -1 : 1)
+          });
+        } catch (err) {
+          post.likedBy = prevLikedBy;
+          post.likesCount = prevCount;
+          renderFeed();
+          reportSaveError(err, "الإعجاب");
+        }
+      } else {
+        showToast("هذا منشور تجريبي أو محلي، لا يُحفظ بعد تحديث الصفحة");
+      }
+    }
+
+    async function toggleFollow(key, displayName) {
+      const name = displayName || key;
+      if (state.following.includes(key)) {
+        state.following = state.following.filter((a) => a !== key);
+        showToast(`تم إلغاء متابعة ${name}`);
+      } else {
+        state.following.push(key);
+        showToast(`تمت متابعة ${name}`);
+        addNotification(`بدأت بمتابعة ${name}`);
+      }
+      renderFeed();
+      if (db && state.currentUser && !state.currentUser.isDemo && state.currentUser.uid) {
+        try {
+          await setDoc(doc(db, "users", state.currentUser.uid), { following: state.following }, { merge: true });
+        } catch (err) {
+          reportSaveError(err, "المتابعة");
+        }
+      }
+    }
+
+    // ==================== التعليقات ====================
+    function openComments(postId) {
+      state.activeCommentPostId = postId;
+      renderComments();
+      commentsModal.classList.add("open");
+    }
+
+    function renderComments() {
+      const post = state.posts.find((p) => String(p.id) === String(state.activeCommentPostId));
+      const list = (post && post.comments) || [];
+      commentsList.innerHTML = list.length
+        ? list.map((c) => `
+            <div class="comment-item">
+              <div class="comment-author">${escapeHtml(c.author)}</div>
+              <div class="comment-text">${escapeHtml(c.text)}</div>
+            </div>
+          `).join("")
+        : `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 18px;">لا توجد تعليقات بعد. كن أول من يعلق!</div>`;
+    }
+
+    closeCommentsBtn.addEventListener("click", () => commentsModal.classList.remove("open"));
+
+    commentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = commentInput.value.trim();
+      if (!text || !state.activeCommentPostId) return;
+      const post = state.posts.find((p) => String(p.id) === String(state.activeCommentPostId));
+      if (!post) return;
+
+      const commentObj = {
+        author: state.currentUser ? state.currentUser.username : "@guest",
+        text
+      };
+      post.comments = [...(post.comments || []), commentObj];
+      commentInput.value = "";
+      renderComments();
+      renderFeed();
+      addNotification(`علّقت على منشور ${post.author}`);
+
+      if (db && state.currentUser && !state.currentUser.isDemo && !String(post.id).startsWith("seed-") && !String(post.id).startsWith("local-")) {
+        try {
+          await updateDoc(doc(db, "videos", String(post.id)), {
+            comments: arrayUnion(commentObj)
+          });
+        } catch (err) {
+          post.comments = (post.comments || []).filter((c) => c !== commentObj);
+          renderComments();
+          renderFeed();
+          reportSaveError(err, "التعليق");
+        }
+      } else {
+        showToast("هذا منشور تجريبي أو محلي، لا يُحفظ بعد تحديث الصفحة");
+      }
+    });
+
+    // ==================== نشر منشور (رابط مباشر أو ملف محلي -> Firestore) ====================
+    openCreateBtn.addEventListener("click", () => createModal.classList.add("open"));
+    closeCreateBtn.addEventListener("click", () => createModal.classList.remove("open"));
+
+    mediaUrlInput.addEventListener("change", () => {
+      const val = mediaUrlInput.value.trim();
+      if (!val) return;
+      if (/\.(png|jpe?g|webp|gif|avif)(\?.*)?$/i.test(val)) {
+        mediaTypeSelect.value = "image";
+      } else if (/\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(val)) {
+        mediaTypeSelect.value = "video";
+      }
+    });
+
+    createPostForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      let mediaType = mediaTypeSelect.value;
+      const typedUrl = mediaUrlInput.value.trim();
+      const file = mediaFileInput.files && mediaFileInput.files[0];
+      const caption = captionInput.value.trim();
+      const tags = tagsInput.value.trim();
+
+      if (typedUrl) {
+        try {
+          const parsed = new URL(typedUrl);
+          if (!["http:", "https:"].includes(parsed.protocol)) {
+            showToast("يرجى إدخال رابط يبدأ بـ http:// أو https://");
+            return;
+          }
+        } catch (_) {
+          showToast("صيغة الرابط غير صحيحة");
+          return;
+        }
+        if (/\.(png|jpe?g|webp|gif|avif)(\?.*)?$/i.test(typedUrl)) {
+          mediaType = "image";
+        }
+      } else if (file) {
+        mediaType = file.type.startsWith("image/") ? "image" : "video";
+      }
+
+      const finalUrl = typedUrl || (file ? URL.createObjectURL(file) : "");
+      if (!finalUrl) {
+        showToast("أدخل رابط الصورة أو الفيديو أو اختر ملفاً");
+        return;
+      }
+
+      const newPost = {
+        mediaType,
+        mediaUrl: finalUrl,
+        author: state.currentUser ? state.currentUser.username : "@onelook_user",
+        authorUid: state.currentUser ? state.currentUser.uid : "guest",
+        avatar: state.currentUser?.avatar || DEFAULT_AVATAR,
+        caption,
+        tags,
+        likesCount: 0,
+        likedBy: [],
+        comments: [],
+        createdAtMs: Date.now()
+      };
+
+      if (db && state.currentUser && !state.currentUser.isDemo && typedUrl) {
+        try {
+          const docRef = await addDoc(collection(db, "videos"), {
+            ...newPost,
+            createdAt: serverTimestamp()
+          });
+          state.posts.unshift({ id: docRef.id, ...newPost });
+        } catch (_) {
+          state.posts.unshift({ id: "local-" + Date.now(), ...newPost });
+        }
+      } else {
+        state.posts.unshift({ id: "local-" + Date.now(), ...newPost });
+      }
+
+      createPostForm.reset();
+      createModal.classList.remove("open");
+      state.feedTab = "foryou";
+      tabForYou.classList.add("active");
+      tabFollowing.classList.remove("active");
+      switchScreen("feedScreen");
+      renderFeed();
+      feedContainer.scrollTo({ top: 0, behavior: "smooth" });
+      addNotification("تم نشر منشورك الجديد في One Look");
+      showToast("تم النشر بنجاح 🚀");
+    });
+
+    // ==================== استكشف، الإشعارات، الملف الشخصي ====================
+    function compressAvatarFile(file, maxSize = 240, quality = 0.78) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              reject(new Error("Canvas unavailable"));
+              return;
+            }
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          };
+          img.onerror = reject;
+          img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    changeAvatarBtn.addEventListener("click", () => avatarFileInput.click());
+    document.getElementById("profileAvatar").addEventListener("click", () => avatarFileInput.click());
+
+    avatarFileInput.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        showToast("يرجى اختيار ملف صورة صالح");
+        return;
+      }
+      try {
+        const compressedAvatar = await compressAvatarFile(file);
+        if (state.currentUser) {
+          state.currentUser.avatar = compressedAvatar;
+          state.posts.forEach((p) => {
+            if (p.authorUid === state.currentUser.uid || p.author === state.currentUser.username) {
+              p.avatar = compressedAvatar;
+            }
+          });
+        }
+        syncUserBadges();
+        renderProfile();
+        renderFeed();
+
+        if (db && auth?.currentUser && state.currentUser && !state.currentUser.isDemo) {
+          await setDoc(
+            doc(db, "users", state.currentUser.uid),
+            { avatar: compressedAvatar, updatedAt: serverTimestamp() },
+            { merge: true }
+          );
+          await syncMyPostsToFirestore();
+        }
+        showToast("تم تحديث الصورة الشخصية بنجاح");
+      } catch (_) {
+        showToast("تعذر معالجة الصورة، جرّب صورة أخرى");
+      } finally {
+        avatarFileInput.value = "";
+      }
+    });
+
+    openEditNameBtn.addEventListener("click", () => {
+      editNameBox.classList.toggle("open");
+      if (editNameBox.classList.contains("open")) {
+        editNameInput.value = (state.currentUser?.username || "").replace(/^@+/, "");
+        editNameInput.focus();
+      }
+    });
+
+    saveNameBtn.addEventListener("click", async () => {
+      if (!state.currentUser) return;
+      const candidate = sanitizeHandle(editNameInput.value);
+      if (!candidate) {
+        showToast("أدخل اسم مستخدم صالحاً");
+        return;
+      }
+      const oldHandle = state.currentUser.username;
+      const updatedHandle = candidate;
+      state.currentUser.username = updatedHandle;
+      state.posts.forEach((p) => {
+        if (p.authorUid === state.currentUser.uid || p.author === oldHandle) {
+          p.author = updatedHandle;
+        }
+      });
+
+      editNameBox.classList.remove("open");
+      syncUserBadges();
+      renderProfile();
+      renderFeed();
+
+      if (auth?.currentUser && !state.currentUser.isDemo) {
+        try {
+          await updateProfile(auth.currentUser, { displayName: updatedHandle });
+        } catch (_) {}
+      }
+      if (db && state.currentUser && !state.currentUser.isDemo) {
+        try {
+          await setDoc(
+            doc(db, "users", state.currentUser.uid),
+            { username: updatedHandle, updatedAt: serverTimestamp() },
+            { merge: true }
+          );
+          await syncMyPostsToFirestore();
+        } catch (_) {}
+      }
+      showToast("تم حفظ اسم المستخدم");
+    });
+
+    function renderExplore() {
+      const grid = document.getElementById("exploreGrid");
+      grid.innerHTML = state.posts.map((p) => {
+        const thumb = p.mediaType === "video"
+          ? `<video src="${escapeHtml(p.mediaUrl)}" muted playsinline></video>`
+          : `<img src="${escapeHtml(p.mediaUrl)}" alt="${escapeHtml(p.caption)}" onerror="this.src='https://placehold.co/400x600/141418/25f4ee?text=1L'" />`;
+        return `
+          <div class="explore-tile" data-jump="${p.id}">
+            ${thumb}
+            <div class="explore-cap">${escapeHtml(p.caption)}</div>
+          </div>
+        `;
+      }).join("");
+
+      grid.querySelectorAll(".explore-tile").forEach((tile) => {
+        tile.addEventListener("click", () => {
+          switchScreen("feedScreen");
+          const targetSlide = feedContainer.querySelector(`[data-id="${tile.dataset.jump}"]`);
+          targetSlide?.scrollIntoView({ behavior: "smooth" });
+        });
+      });
+    }
+
+    function renderNotifications() {
+      const listEl = document.getElementById("notifList");
+      listEl.innerHTML = state.notifications.length
+        ? state.notifications.map((n) => `<div class="notif-item"><span>${escapeHtml(n.text)}</span></div>`).join("")
+        : `<div style="color: var(--text-muted); text-align: center; padding: 24px;">لا توجد إشعارات حالياً</div>`;
+    }
+
+    document.getElementById("clearNotifBtn").addEventListener("click", () => {
+      state.notifications = [];
+      renderNotifications();
+    });
+
+    function renderProfile() {
+      const u = state.currentUser || {
+        username: "@onelook_user",
+        email: "user@onelook.app",
+        uid: "guest",
+        avatar: DEFAULT_AVATAR,
+        followersCount: 0
+      };
+      document.getElementById("profileAvatar").src = u.avatar || DEFAULT_AVATAR;
+      document.getElementById("profileName").innerHTML = `<bdi>${escapeHtml(u.username)}</bdi>`;
+      document.getElementById("profileEmail").textContent = u.email || "حساب ون لوك";
+      document.getElementById("statFollowing").textContent = state.following.length;
+      document.getElementById("statFollowers").textContent = typeof u.followersCount === "number" ? u.followersCount : 0;
+      const myLikes = state.posts.filter((p) => Array.isArray(p.likedBy) && p.likedBy.includes(u.uid)).length;
+      document.getElementById("statLikes").textContent = myLikes;
+
+      const mine = state.posts.filter((p) => p.authorUid === u.uid || p.author === u.username);
+      const myGrid = document.getElementById("myPostsGrid");
+      myGrid.innerHTML = mine.length
+        ? mine.map((p) => `
+            <div class="explore-tile" data-jump="${p.id}">
+              ${p.mediaType === "video"
+                ? `<video src="${escapeHtml(p.mediaUrl)}" muted playsinline></video>`
+                : `<img src="${escapeHtml(p.mediaUrl)}" alt="${escapeHtml(p.caption)}" onerror="this.src='https://placehold.co/400x600/141418/25f4ee?text=1L'" />`}
+              <div class="explore-cap">${escapeHtml(p.caption)}</div>
+            </div>
+          `).join("")
+        : `<div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center; padding: 20px; font-size: 0.85rem;">لم تنشر أي لقطات بعد. اضغط (+) لإضافة منشورك الأول!</div>`;
+
+      myGrid.querySelectorAll(".explore-tile").forEach((tile) => {
+        tile.addEventListener("click", () => {
+          switchScreen("feedScreen");
+          const targetSlide = feedContainer.querySelector(`[data-id="${tile.dataset.jump}"]`);
+          targetSlide?.scrollIntoView({ behavior: "smooth" });
+        });
+      });
+    }
+  </script>
+</body>
+</html>
